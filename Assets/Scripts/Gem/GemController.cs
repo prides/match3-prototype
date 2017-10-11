@@ -1,21 +1,30 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GemController : GemComponent
 {
+    #region events
     public delegate void SimpleGemEventDelegate(GemController sender);
     public event SimpleGemEventDelegate OnReadyEvent;
 
-    public delegate void GemEventWithArrayDelegate(GemController sender, GemController[] array);
-    public event GemEventWithArrayDelegate OnMatchEvent;
+    public delegate void PossibleMatchDelegate(GemController sender, PossibleMatch possibleMatch);
+    public event PossibleMatchDelegate OnPossibleMatchAddedEvent;
+    #endregion
 
+    #region components
     [SerializeField]
     private GemComponent[] gemComponents;
 
     [SerializeField]
     private Animator gemAnimator;
 
+    [SerializeField]
+    private MovingComponent movingComponent;
+    #endregion
+
+    #region properties
     [SerializeField]
     [ReadOnly]
     private int currentGemType = 0;
@@ -46,18 +55,35 @@ public class GemController : GemComponent
     [SerializeField]
     [ReadOnly]
     private bool isActive = false;
+    public bool IsActive
+    {
+        get { return isActive; }
+    }
+
+    private List<PossibleMatch> possibleMatches = new List<PossibleMatch>();
+    public List<PossibleMatch> PossibleMatches
+    {
+        get { return possibleMatches; }
+    }
+    #endregion
 
     #region neighbor
+    [Flags]
+    public enum NeighborChanged
+    {
+        None = 0,
+        Left = 1,
+        Right = 2,
+        Up = 4,
+        Down = 8
+    }
+
     private GemController leftNeighbor = null;
     private GemController rightNeighbor = null;
     private GemController upNeighbor = null;
     private GemController downNeighbor = null;
 
-    private bool neighborChanged = false;
-    private bool leftNeighborChanged = false;
-    private bool rightNeighborChanged = false;
-    private bool upNeighborChanged = false;
-    private bool downNeighborChanged = false;
+    private NeighborChanged neighborChangedFlag = NeighborChanged.None;
 
     public GemController LeftNeighbor
     {
@@ -65,7 +91,7 @@ public class GemController : GemComponent
         set
         {
             leftNeighbor = value;
-            neighborChanged = leftNeighborChanged = true;
+            neighborChangedFlag |= NeighborChanged.Left;
         }
     }
 
@@ -75,7 +101,7 @@ public class GemController : GemComponent
         set
         {
             rightNeighbor = value;
-            neighborChanged = rightNeighborChanged = true;
+            neighborChangedFlag |= NeighborChanged.Right;
         }
     }
 
@@ -85,7 +111,7 @@ public class GemController : GemComponent
         set
         {
             upNeighbor = value;
-            neighborChanged = upNeighborChanged = true;
+            neighborChangedFlag |= NeighborChanged.Up;
         }
     }
 
@@ -95,10 +121,43 @@ public class GemController : GemComponent
         set
         {
             downNeighbor = value;
-            neighborChanged = downNeighborChanged = true;
+            neighborChangedFlag |= NeighborChanged.Down;
         }
     }
     #endregion
+
+    #region unity events
+    private void Start()
+    {
+        movingComponent.OnMovingStartEvent += OnMovingStart;
+        movingComponent.OnMovingEndEvent += OnMovingEnd;
+    }
+
+    private void OnDestroy()
+    {
+        movingComponent.OnMovingStartEvent -= OnMovingStart;
+        movingComponent.OnMovingEndEvent -= OnMovingEnd;
+    }
+
+    private void LateUpdate()
+    {
+        if (neighborChangedFlag != NeighborChanged.None)
+        {
+            OnNeighborChanged();
+        }
+    }
+    #endregion
+
+    public void Init()
+    {
+        StartCoroutine(WaitAndTrigger(Randomizer.Range(0.0f, 0.75f), "appear"));
+    }
+
+    private IEnumerator WaitAndTrigger(float wait, string triggerName)
+    {
+        yield return new WaitForSeconds(wait);
+        gemAnimator.SetTrigger(triggerName);
+    }
 
     public override void SetGemType(int type)
     {
@@ -117,115 +176,124 @@ public class GemController : GemComponent
         {
             transform.localPosition = new Vector3(x, y);
         }
-    }
-
-    public void OnMatch()
-    {
-        gemAnimator.SetTrigger("fadeout");
-    }
-
-    public void Init()
-    {
-        StartCoroutine(WaitAndTrigger(Randomizer.Range(0.0f, 0.75f), "appear"));
-    }
-
-    private IEnumerator WaitAndTrigger(float wait, string triggerName)
-    {
-        yield return new WaitForSeconds(wait);
-        gemAnimator.SetTrigger(triggerName);
-    }
-
-    private void LateUpdate()
-    {
-        if (neighborChanged)
+        else
         {
-            OnNeighborChanged();
+            movingComponent.Destination = new Vector3(x, y);
         }
     }
 
     private void OnNeighborChanged()
     {
-        List<GemController> matchedGems = new List<GemController>();
-        matchedGems.Add(this);
-        GemController neighbor = leftNeighbor;
-        while (neighbor != null && neighbor.isActive)
+        if ((neighborChangedFlag & NeighborChanged.Left) == NeighborChanged.Left)
         {
-            if (neighbor.CurrentGemType == this.CurrentGemType)
-            {
-                matchedGems.Add(neighbor);
-            }
-            else
-            {
-                break;
-            }
-            neighbor = neighbor.leftNeighbor;
+            CheckNeighbor(leftNeighbor);
+        }
+        if ((neighborChangedFlag & NeighborChanged.Right) == NeighborChanged.Right)
+        {
+            CheckNeighbor(rightNeighbor);
+        }
+        if ((neighborChangedFlag & NeighborChanged.Up) == NeighborChanged.Up)
+        {
+            CheckNeighbor(upNeighbor);
+        }
+        if ((neighborChangedFlag & NeighborChanged.Down) == NeighborChanged.Down)
+        {
+            CheckNeighbor(downNeighbor);
         }
 
-        neighbor = rightNeighbor;
-        while (neighbor != null && neighbor.isActive)
+        if (possibleMatches.Count > 1)
         {
-            if (neighbor.CurrentGemType == this.CurrentGemType)
+            List<PossibleMatch> posMatch = new List<PossibleMatch>(possibleMatches);
+            for (int i = 0; i < posMatch.Count; i++)
             {
-                matchedGems.Add(neighbor);
-            }
-            else
-            {
-                break;
-            }
-            neighbor = neighbor.rightNeighbor;
-        }
-
-        if (matchedGems.Count >= 3)
-        {
-            if (null != OnMatchEvent)
-            {
-                OnMatchEvent(this, matchedGems.ToArray());
-            }
-        }
-
-        matchedGems.Clear();
-        matchedGems.Add(this);
-        neighbor = upNeighbor;
-        while (neighbor != null && neighbor.isActive)
-        {
-            if (neighbor.CurrentGemType == this.CurrentGemType)
-            {
-                matchedGems.Add(neighbor);
-            }
-            else
-            {
-                break;
-            }
-            neighbor = neighbor.upNeighbor;
-        }
-
-        neighbor = downNeighbor;
-        while (neighbor != null && neighbor.isActive)
-        {
-            if (neighbor.CurrentGemType == this.CurrentGemType)
-            {
-                matchedGems.Add(neighbor);
-            }
-            else
-            {
-                break;
-            }
-            neighbor = neighbor.downNeighbor;
-        }
-
-        if (matchedGems.Count >= 3)
-        {
-            if (null != OnMatchEvent)
-            {
-                OnMatchEvent(this, matchedGems.ToArray());
+                for (int j = 0; j < posMatch.Count; j++)
+                {
+                    if (posMatch[i] == posMatch[j])
+                    {
+                        continue;
+                    }
+                    if (posMatch[i].MatchDirection == posMatch[j].MatchDirection)
+                    {
+                        posMatch[i].Merge(posMatch[j]);
+                    }
+                }
             }
         }
 
-        neighborChanged = false;
+        for (int i = possibleMatches.Count - 1; i >= 0; i--)
+        {
+            possibleMatches[i].CheckMatch();
+        }
+
+        neighborChangedFlag = NeighborChanged.None;
+    }
+
+    private void CheckNeighbor(GemController neighbor)
+    {
+        if (null == neighbor)
+        {
+            return;
+        }
+        if (neighbor.CurrentGemType != this.CurrentGemType)
+        {
+            return;
+        }
+        bool gemAdded = false;
+        foreach (PossibleMatch possibleMatch in neighbor.PossibleMatches)
+        {
+            if (possibleMatch.AddGem(this))
+            {
+                gemAdded = true;
+            }
+        }
+        if (!gemAdded)
+        {
+            PossibleMatch possibleMatch = new PossibleMatch(this.CurrentGemType);
+            possibleMatch.AddGem(this);
+            possibleMatch.AddGem(neighbor);
+            if (null != OnPossibleMatchAddedEvent)
+            {
+                OnPossibleMatchAddedEvent(this, possibleMatch);
+            }
+        }
+    }
+
+    private void Clear()
+    {
+        isActive = false;
+        LeftNeighbor = null;
+        RightNeighbor = null;
+        UpNeighbor = null;
+        DownNeighbor = null;
+        for (int i = possibleMatches.Count - 1; i >= 0; i--)
+        {
+            possibleMatches[i].RemoveGem(this);
+        }
+    }
+
+    private void OnMovingStart(MovingComponent sender)
+    {
+        Clear();
+    }
+
+    private void OnMovingEnd(MovingComponent sender)
+    {
+        isActive = true;
+        if (null != OnReadyEvent)
+        {
+            OnReadyEvent(this);
+        }
+    }
+
+    public void OnMatch()
+    {
+        Clear();
+        gemAnimator.SetTrigger("fadeout");
     }
 
     private void OnAppearOver()
     {
+        //Debug.Log("OnAppearOver");
         isActive = true;
         if (null != OnReadyEvent)
         {
