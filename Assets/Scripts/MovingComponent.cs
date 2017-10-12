@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class MovingComponent : MonoBehaviour
+public class MovingComponent : GemComponent
 {
     public delegate void SimpleMovingComponentEvent(MovingComponent sender);
     public event SimpleMovingComponentEvent OnMovingStartEvent;
@@ -41,6 +41,18 @@ public class MovingComponent : MonoBehaviour
     private MovingState state = MovingState.Idle;
     private float progress = 0.0f;
 
+    public override void SetPosition(int x, int y, bool interpolate = false)
+    {
+        if (interpolate)
+        {
+            Destination = new Vector3(x, y);
+        }
+        else
+        {
+            Trans.position = new Vector3(x, y);
+        }
+    }
+
     private void Update()
     {
         if (isDirty)
@@ -65,42 +77,5 @@ public class MovingComponent : MonoBehaviour
                 }
             }
         }
-    }
-
-    private Vector3 mouseDownPosition = Vector3.zero;
-    private void OnMouseDown()
-    {
-        mouseDownPosition = Input.mousePosition;
-    }
-
-    private void OnMouseUp()
-    {
-        if (Vector3.Distance(mouseDownPosition, Input.mousePosition) > 0.25f)
-        {
-            Vector3 positionDiff = Input.mousePosition - mouseDownPosition;
-            if (Mathf.Abs(positionDiff.x) > Mathf.Abs(positionDiff.y))
-            {
-                if (positionDiff.x > 0)
-                {
-                    GemManager.instance.MoveGem(GetComponent<GemController>(), 1);
-                }
-                else
-                {
-                    GemManager.instance.MoveGem(GetComponent<GemController>(), 3);
-                }
-            }
-            else
-            {
-                if (positionDiff.y > 0)
-                {
-                    GemManager.instance.MoveGem(GetComponent<GemController>(), 0);
-                }
-                else
-                {
-                    GemManager.instance.MoveGem(GetComponent<GemController>(), 2);
-                }
-            }
-        }
-        mouseDownPosition = Vector2.zero;
     }
 }

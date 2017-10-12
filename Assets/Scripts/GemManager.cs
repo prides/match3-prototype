@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 public class GemManager : MonoBehaviour
 {
-    public static GemManager instance;
-
     public GemController gemPrefab;
 
     public int rowCount = 7;
@@ -15,7 +13,6 @@ public class GemManager : MonoBehaviour
 
     private void Awake()
     {
-        instance = this;
         Init();
     }
 
@@ -44,6 +41,7 @@ public class GemManager : MonoBehaviour
                     {
                         gems[x][y].OnReadyEvent -= OnGemReady;
                         gems[x][y].OnPossibleMatchAddedEvent -= OnPossibleMatchAdded;
+                        gems[x][y].OnMovingToEvent -= OnGemMove;
                     }
                 }
             }
@@ -138,49 +136,56 @@ public class GemManager : MonoBehaviour
         gem.SetGemType(type);
         gem.OnReadyEvent += OnGemReady;
         gem.OnPossibleMatchAddedEvent += OnPossibleMatchAdded;
+        gem.OnMovingToEvent += OnGemMove;
         gem.Init();
         return gem;
     }
 
-    private void Update()
-    {
-        int a = 1 + 3;
-    }
-
-    public void MoveGem(GemController gem, int dir)
+    public void OnGemMove(GemController gem, Direction direction)
     {
         int x = gem.CurrentX;
         int y = gem.CurrentY;
-        switch (dir)
+        switch (direction)
         {
-            case 0:
+            case Direction.Up:
                 if (gem.CurrentY < rowCount - 1)
                 {
+                    SwitchGems(x, y, x, y + 1);
                     gem.SetPosition(x, y + 1, true);
                     gem.UpNeighbor.SetPosition(x, y, true);
                 }
                 break;
-            case 1:
+            case Direction.Right:
                 if (gem.CurrentX < columnCount - 1)
                 {
+                    SwitchGems(x, y, x + 1, y);
                     gem.SetPosition(x + 1, y, true);
                     gem.RightNeighbor.SetPosition(x, y, true);
                 }
                 break;
-            case 2:
+            case Direction.Down:
                 if (gem.CurrentY > 0)
                 {
+                    SwitchGems(x, y, x, y - 1);
                     gem.SetPosition(x, y - 1, true);
                     gem.DownNeighbor.SetPosition(x, y, true);
                 }
                 break;
-            case 3:
+            case Direction.Left:
                 if (gem.CurrentX > 0)
                 {
+                    SwitchGems(x, y, x - 1, y);
                     gem.SetPosition(x - 1, y, true);
                     gem.LeftNeighbor.SetPosition(x, y, true);
                 }
                 break;
         }
+    }
+
+    private void SwitchGems(int x1, int y1, int x2, int y2)
+    {
+        GemController tmpgem = gems[x1][y1];
+        gems[x1][y1] = gems[x2][y2];
+        gems[x2][y2] = tmpgem;
     }
 }

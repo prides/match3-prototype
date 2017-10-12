@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 public class PossibleMatch
 {
-    public enum Direction
+    public enum Line
     {
         None,
         Horizontal,
@@ -21,8 +21,8 @@ public class PossibleMatch
         get { return matchType; }
     }
 
-    private Direction matchDirection = Direction.None;
-    public Direction MatchDirection
+    private Line matchDirection = Line.None;
+    public Line MatchDirection
     {
         get { return matchDirection; }
     }
@@ -38,11 +38,11 @@ public class PossibleMatch
     {
         if (gem.CurrentGemType == matchType)
         {
-            if (matchDirection == Direction.Horizontal && gem.CurrentX != matchedGems[0].CurrentX)
+            if (matchDirection == Line.Horizontal && gem.CurrentX != matchedGems[0].CurrentX)
             {
                 return false;
             }
-            if (matchDirection == Direction.Vertical && gem.CurrentY != matchedGems[0].CurrentY)
+            if (matchDirection == Line.Vertical && gem.CurrentY != matchedGems[0].CurrentY)
             {
                 return false;
             }
@@ -54,11 +54,11 @@ public class PossibleMatch
             {
                 if (matchedGems[0].CurrentX == gem.CurrentX)
                 {
-                    matchDirection = Direction.Horizontal;
+                    matchDirection = Line.Horizontal;
                 }
                 else if (matchedGems[0].CurrentY == gem.CurrentY)
                 {
-                    matchDirection = Direction.Vertical;
+                    matchDirection = Line.Vertical;
                 }
             }
             matchedGems.Add(gem);
@@ -89,7 +89,7 @@ public class PossibleMatch
 
     public void Clear()
     {
-        matchDirection = Direction.None;
+        matchDirection = Line.None;
         foreach (GemController gem in matchedGems)
         {
             gem.PossibleMatches.Remove(this);
