@@ -113,8 +113,8 @@ public class SwipeComponent : GemComponent
                 {
                     OnSwipeEndEvent(this, currentDirection);
                 }
-                SetToDefault();
             }
+            SetToDefault();
         }
     }
 

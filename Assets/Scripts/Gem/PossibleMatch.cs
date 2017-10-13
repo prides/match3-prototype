@@ -4,9 +4,10 @@ public class PossibleMatch
 {
     public enum Line
     {
-        None,
-        Horizontal,
-        Vertical
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2,
+        Cross = 3
     }
 
     public delegate void GemsMatchedEventDelegate(PossibleMatch sender, GemController[] matchedGems);
@@ -28,6 +29,16 @@ public class PossibleMatch
     }
 
     private List<GemController> matchedGems = new List<GemController>();
+    public List<GemController> MatchedGems
+    {
+        get { return matchedGems; }
+    }
+
+    private bool isOver = false;
+    public bool IsOver
+    {
+        get { return isOver; }
+    }
 
     public PossibleMatch(int type)
     {
@@ -80,6 +91,7 @@ public class PossibleMatch
 
     public void Merge(PossibleMatch other)
     {
+        this.matchDirection |= other.matchDirection;
         foreach (GemController gem in other.matchedGems)
         {
             AddGem(gem);
@@ -89,6 +101,7 @@ public class PossibleMatch
 
     public void Clear()
     {
+        isOver = true;
         matchDirection = Line.None;
         foreach (GemController gem in matchedGems)
         {
@@ -99,6 +112,11 @@ public class PossibleMatch
         {
             OnOver(this);
         }
+    }
+
+    public bool IsMatched()
+    {
+        return matchedGems.Count >= 3;
     }
 
     public bool CheckMatch()

@@ -163,6 +163,13 @@ public class GemController : GemComponent
             }
         }
     }
+
+    private SwipeAction currentSwipeAction = null;
+    public SwipeAction CurrentSwipeAction
+    {
+        get { return currentSwipeAction; }
+        set { currentSwipeAction = value; }
+    }
     #endregion
 
     #region unity events
@@ -184,7 +191,7 @@ public class GemController : GemComponent
         swipeComponent.OnSwipeEndEvent -= OnSwipeEnd;
     }
 
-    private void LateUpdate()
+    private void Update()
     {
         if (neighborChangedFlag != NeighborChanged.None)
         {
@@ -193,9 +200,23 @@ public class GemController : GemComponent
     }
     #endregion
 
-    public void Init()
+    public enum State
     {
-        StartCoroutine(WaitAndTrigger(Randomizer.Range(0.0f, 0.75f), "appear"));
+        Idle,
+        Moving,
+        Matched
+    }
+
+    private State currentState;
+    public State CurrentState
+    {
+        get { return currentState; }
+    }
+
+    public void Init(bool randomAppear = true)
+    {
+        isActive = true;
+        StartCoroutine(WaitAndTrigger(randomAppear ? Randomizer.Range(0.0f, 0.75f) : 0.0f, "appear"));
     }
 
     private IEnumerator WaitAndTrigger(float wait, string triggerName)
@@ -220,6 +241,23 @@ public class GemController : GemComponent
         foreach (GemComponent gemComponent in gemComponents)
         {
             gemComponent.SetPosition(x, y, interpolate);
+        }
+    }
+
+    public GemController GetNeighbor(Direction direction)
+    {
+        switch(direction)
+        {
+            case Direction.Left:
+                return this.LeftNeighbor;
+            case Direction.Right:
+                return this.RightNeighbor;
+            case Direction.Up:
+                return this.UpNeighbor;
+            case Direction.Down:
+                return this.DownNeighbor;
+            default:
+                return null;
         }
     }
 
@@ -257,31 +295,26 @@ public class GemController : GemComponent
                     {
                         posMatch[i].Merge(posMatch[j]);
                     }
+                    else if (posMatch[i].IsMatched() && posMatch[j].IsMatched())
+                    {
+                        posMatch[i].Merge(posMatch[j]);
+                    }
                 }
             }
         }
 
-        bool needToReturn = false;
-        if (isMovingTo)
-        {
-            needToReturn = true;
-            isMovingTo = false;
-        }
-
+        bool isMatched = false;
         for (int i = possibleMatches.Count - 1; i >= 0; i--)
         {
-            if(possibleMatches[i].CheckMatch())
+            if (possibleMatches[i].CheckMatch())
             {
-                needToReturn = false;
+                isMatched = true;
             }
         }
 
-        if (needToReturn)
+        if (currentState == State.Idle && null != currentSwipeAction)
         {
-            if (null != OnMovingToEvent)
-            {
-                OnMovingToEvent(this, DirectionHelper.GetOppositDirection(movingToDirection));
-            }
+            currentSwipeAction.SetGemSwipeResult(this, isMatched);
         }
 
         neighborChangedFlag = NeighborChanged.None;
@@ -320,10 +353,6 @@ public class GemController : GemComponent
     private void Clear()
     {
         isActive = false;
-        //LeftNeighbor = null;
-        //RightNeighbor = null;
-        //UpNeighbor = null;
-        //DownNeighbor = null;
         for (int i = possibleMatches.Count - 1; i >= 0; i--)
         {
             possibleMatches[i].RemoveGem(this);
@@ -333,30 +362,28 @@ public class GemController : GemComponent
     private void OnSwipeStart(SwipeComponent sender, Direction direction)
     {
         Clear();
-        //isActive = false;
+        currentState = State.Moving;
     }
 
-    private bool isMovingTo = false;
-    private Direction movingToDirection;
     private void OnSwipeEnd(SwipeComponent sender, Direction direction)
     {
-        Debug.Log("Moving gem(" + currentX + ", " + currentY + ") to " + direction);
+        //Debug.Log("Moving gem(" + currentX + ", " + currentY + ") to " + direction);
         if (null != OnMovingToEvent)
         {
             OnMovingToEvent(this, direction);
         }
-        isMovingTo = true;
-        movingToDirection = direction;
     }
 
     private void OnMovingStart(MovingComponent sender)
     {
         Clear();
+        currentState = State.Moving;
     }
 
     private void OnMovingEnd(MovingComponent sender)
     {
         isActive = true;
+        currentState = State.Idle;
         if (null != OnReadyEvent)
         {
             OnReadyEvent(this);
@@ -365,7 +392,10 @@ public class GemController : GemComponent
 
     public void OnMatch()
     {
-        Clear();
+        //Clear();
+        currentState = State.Matched;
+        isActive = false;
+        possibleMatches.Clear();
         gemAnimator.SetTrigger("fadeout");
     }
 
