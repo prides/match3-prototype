@@ -181,38 +181,22 @@ public class GemManager : MonoBehaviour
         gem.transform.parent = this.transform;
         gem.SetPosition(x, y);
 
-        List<int> unacceptableTypes = new List<int>();
+        GemType unacceptableType = GemType.None;
         GemController xm1Neighbor = x - 1 >= 0 ? gems[x - 1][y] : null;
         GemController xm2Neighbor = x - 2 >= 0 ? gems[x - 2][y] : null;
-        if ((xm1Neighbor != null && xm2Neighbor != null) && (xm1Neighbor.CurrentGemType == xm2Neighbor.CurrentGemType))
+        if ((xm1Neighbor != null && xm2Neighbor != null) && (xm1Neighbor.CurrentGemType.HasSameFlags(xm2Neighbor.CurrentGemType)))
         {
-            unacceptableTypes.Add(xm1Neighbor.CurrentGemType);
+            unacceptableType.AddFlag(xm1Neighbor.CurrentGemType.GetSameFlags(xm2Neighbor.CurrentGemType), out unacceptableType);
         }
 
         GemController ym1Neighbor = y - 1 >= 0 ? gems[x][y - 1] : null;
         GemController ym2Neighbor = y - 2 >= 0 ? gems[x][y - 1] : null;
-        if ((ym1Neighbor != null && ym2Neighbor != null) && (ym1Neighbor.CurrentGemType == ym2Neighbor.CurrentGemType))
+        if ((ym1Neighbor != null && ym2Neighbor != null) && (ym1Neighbor.CurrentGemType.HasSameFlags(ym2Neighbor.CurrentGemType)))
         {
-            unacceptableTypes.Add(ym1Neighbor.CurrentGemType);
+            unacceptableType.AddFlag(ym1Neighbor.CurrentGemType.GetSameFlags(ym2Neighbor.CurrentGemType), out unacceptableType);
         }
 
-        int type = Randomizer.Range(1, 6);
-        if (unacceptableTypes.Count > 0)
-        {
-            bool acceptableTypeSelected = true;
-            do
-            {
-                acceptableTypeSelected = true;
-                type = Randomizer.Range(1, 6);
-                foreach (int unacceptableType in unacceptableTypes)
-                {
-                    if (unacceptableType == type)
-                    {
-                        acceptableTypeSelected = false;
-                    }
-                }
-            } while (!acceptableTypeSelected);
-        }
+        GemType type = (~unacceptableType).Random();
 
         gem.SetGemType(type);
         gem.OnReadyEvent += OnGemReady;

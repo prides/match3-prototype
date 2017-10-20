@@ -16,8 +16,8 @@ public class PossibleMatch
     public delegate void SimplePossibleMatchDelegate(PossibleMatch sender);
     public event SimplePossibleMatchDelegate OnOver;
 
-    private int matchType = 0;
-    public int MatchType
+    private GemType matchType = 0;
+    public GemType MatchType
     {
         get { return matchType; }
     }
@@ -40,14 +40,14 @@ public class PossibleMatch
         get { return isOver; }
     }
 
-    public PossibleMatch(int type)
+    public PossibleMatch(GemType type)
     {
         matchType = type;
     }
 
     public bool AddGem(GemController gem)
     {
-        if (gem.CurrentGemType == matchType)
+        if (gem.CurrentGemType.HasSameFlags(matchType))
         {
             if (matchDirection == Line.Horizontal && gem.CurrentX != matchedGems[0].CurrentX)
             {

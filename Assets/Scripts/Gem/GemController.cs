@@ -34,8 +34,8 @@ public class GemController : GemComponent
     #region properties
     [SerializeField]
     [ReadOnly]
-    private int currentGemType = 0;
-    public int CurrentGemType
+    private GemType currentGemType = 0;
+    public GemType CurrentGemType
     {
         get { return currentGemType; }
         private set { currentGemType = value; }
@@ -225,7 +225,7 @@ public class GemController : GemComponent
         gemAnimator.SetTrigger(triggerName);
     }
 
-    public override void SetGemType(int type)
+    public override void SetGemType(GemType type)
     {
         currentGemType = type;
         foreach (GemComponent gemComponent in gemComponents)
@@ -326,7 +326,7 @@ public class GemController : GemComponent
         {
             return;
         }
-        if (neighbor.CurrentGemType != this.CurrentGemType)
+        if (!neighbor.CurrentGemType.HasSameFlags(this.CurrentGemType))
         {
             return;
         }
@@ -340,7 +340,7 @@ public class GemController : GemComponent
         }
         if (!gemAdded)
         {
-            PossibleMatch possibleMatch = new PossibleMatch(this.CurrentGemType);
+            PossibleMatch possibleMatch = new PossibleMatch(this.CurrentGemType.GetSameFlags(neighbor.CurrentGemType));
             possibleMatch.AddGem(this);
             possibleMatch.AddGem(neighbor);
             if (null != OnPossibleMatchAddedEvent)

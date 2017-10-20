@@ -1,23 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class GemSpriteSwitcher : GemComponent
 {
-    public Sprite[] gemSprites;
+    [Serializable]
+    public class GemSprite
+    {
+        public GemType type;
+        public Sprite sprite;
+    }
+    public GemSprite[] gemSprites;
 
     [SerializeField]
     private SpriteRenderer spriteRenderer;
 
-    public override void SetGemType(int type)
+    public override void SetGemType(GemType type)
     {
         if (spriteRenderer == null)
         {
             Debug.LogError("SpriteRenderer of " + gameObject.name + " is null");
         }
-        if (gemSprites.Length <= type)
+        GemSprite gemSprite = gemSprites.FirstOrDefault(g => g.type == type);
+        if (gemSprite == null)
         {
-            Debug.LogError("Invalid value of type, type value is more than gemSprites length");
+            Debug.LogError("Failed to find sprite of type " + type);
+            return;
         }
-        spriteRenderer.sprite = gemSprites[type];
+        spriteRenderer.sprite = gemSprite.sprite;
     }
 }
