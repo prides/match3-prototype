@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(SwipeComponent), typeof(MovingComponent), typeof(Animator))]
+[RequireComponent(typeof(MovingComponent), typeof(Animator))]
 public class GemController : GemComponent
 {
     #region events
@@ -26,9 +26,6 @@ public class GemController : GemComponent
 
     [SerializeField]
     private MovingComponent movingComponent;
-
-    [SerializeField]
-    private SwipeComponent swipeComponent;
     #endregion
 
     #region properties
@@ -72,25 +69,26 @@ public class GemController : GemComponent
     {
         get { return possibleMatches; }
     }
+
+    public Direction Constrains
+    {
+        get
+        {
+            return (LeftNeighbor == null ? Direction.Left : Direction.None)
+                | (RightNeighbor == null ? Direction.Right : Direction.None)
+                | (UpNeighbor == null ? Direction.Up : Direction.None)
+                | (DownNeighbor == null ? Direction.Down : Direction.None);
+        }
+    }
     #endregion
 
     #region neighbor
-    [Flags]
-    public enum NeighborChanged
-    {
-        None = 0,
-        Left = 1,
-        Right = 2,
-        Up = 4,
-        Down = 8
-    }
-
     private GemController leftNeighbor = null;
     private GemController rightNeighbor = null;
     private GemController upNeighbor = null;
     private GemController downNeighbor = null;
 
-    private NeighborChanged neighborChangedFlag = NeighborChanged.None;
+    private Direction neighborChangedFlag = Direction.None;
 
     public GemController LeftNeighbor
     {
@@ -98,15 +96,7 @@ public class GemController : GemComponent
         set
         {
             leftNeighbor = value;
-            neighborChangedFlag |= NeighborChanged.Left;
-            if (leftNeighbor == null)
-            {
-                swipeComponent.AddConstrain(Direction.Left);
-            }
-            else
-            {
-                swipeComponent.RemoveConstrain(Direction.Left);
-            }
+            neighborChangedFlag |= Direction.Left;
         }
     }
 
@@ -116,15 +106,7 @@ public class GemController : GemComponent
         set
         {
             rightNeighbor = value;
-            neighborChangedFlag |= NeighborChanged.Right;
-            if (rightNeighbor == null)
-            {
-                swipeComponent.AddConstrain(Direction.Right);
-            }
-            else
-            {
-                swipeComponent.RemoveConstrain(Direction.Right);
-            }
+            neighborChangedFlag |= Direction.Right;
         }
     }
 
@@ -134,15 +116,7 @@ public class GemController : GemComponent
         set
         {
             upNeighbor = value;
-            neighborChangedFlag |= NeighborChanged.Up;
-            if (upNeighbor == null)
-            {
-                swipeComponent.AddConstrain(Direction.Up);
-            }
-            else
-            {
-                swipeComponent.RemoveConstrain(Direction.Up);
-            }
+            neighborChangedFlag |= Direction.Up;
         }
     }
 
@@ -152,15 +126,7 @@ public class GemController : GemComponent
         set
         {
             downNeighbor = value;
-            neighborChangedFlag |= NeighborChanged.Down;
-            if (downNeighbor == null)
-            {
-                swipeComponent.AddConstrain(Direction.Down);
-            }
-            else
-            {
-                swipeComponent.RemoveConstrain(Direction.Down);
-            }
+            neighborChangedFlag |= Direction.Down;
         }
     }
 
@@ -177,23 +143,17 @@ public class GemController : GemComponent
     {
         movingComponent.OnMovingStartEvent += OnMovingStart;
         movingComponent.OnMovingEndEvent += OnMovingEnd;
-
-        swipeComponent.OnSwipeStartEvent += OnSwipeStart;
-        swipeComponent.OnSwipeEndEvent += OnSwipeEnd;
     }
 
     private void OnDestroy()
     {
         movingComponent.OnMovingStartEvent -= OnMovingStart;
         movingComponent.OnMovingEndEvent -= OnMovingEnd;
-
-        swipeComponent.OnSwipeStartEvent -= OnSwipeStart;
-        swipeComponent.OnSwipeEndEvent -= OnSwipeEnd;
     }
 
     private void Update()
     {
-        if (neighborChangedFlag != NeighborChanged.None)
+        if (neighborChangedFlag != Direction.None)
         {
             OnNeighborChanged();
         }
@@ -263,19 +223,19 @@ public class GemController : GemComponent
 
     private void OnNeighborChanged()
     {
-        if ((neighborChangedFlag & NeighborChanged.Left) == NeighborChanged.Left)
+        if ((neighborChangedFlag & Direction.Left) == Direction.Left)
         {
             CheckNeighbor(leftNeighbor);
         }
-        if ((neighborChangedFlag & NeighborChanged.Right) == NeighborChanged.Right)
+        if ((neighborChangedFlag & Direction.Right) == Direction.Right)
         {
             CheckNeighbor(rightNeighbor);
         }
-        if ((neighborChangedFlag & NeighborChanged.Up) == NeighborChanged.Up)
+        if ((neighborChangedFlag & Direction.Up) == Direction.Up)
         {
             CheckNeighbor(upNeighbor);
         }
-        if ((neighborChangedFlag & NeighborChanged.Down) == NeighborChanged.Down)
+        if ((neighborChangedFlag & Direction.Down) == Direction.Down)
         {
             CheckNeighbor(downNeighbor);
         }
@@ -317,7 +277,7 @@ public class GemController : GemComponent
             currentSwipeAction.SetGemSwipeResult(this, isMatched);
         }
 
-        neighborChangedFlag = NeighborChanged.None;
+        neighborChangedFlag = Direction.None;
     }
 
     private void CheckNeighbor(GemController neighbor)
@@ -359,13 +319,13 @@ public class GemController : GemComponent
         }
     }
 
-    private void OnSwipeStart(SwipeComponent sender, Direction direction)
+    public void OnSwipeStart(SwipeComponent sender, Direction direction)
     {
         Clear();
         currentState = State.Moving;
     }
 
-    private void OnSwipeEnd(SwipeComponent sender, Direction direction)
+    public void OnSwipeEnd(SwipeComponent sender, Direction direction)
     {
         //Debug.Log("Moving gem(" + currentX + ", " + currentY + ") to " + direction);
         if (null != OnMovingToEvent)

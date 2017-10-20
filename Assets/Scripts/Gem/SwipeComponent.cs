@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class SwipeComponent : GemComponent
+public class SwipeComponent : MonoBehaviour
 {
     public delegate void SimpleSwipeComponentEvent(SwipeComponent sender, Direction direction);
     public event SimpleSwipeComponentEvent OnSwipeStartEvent;
@@ -12,19 +12,6 @@ public class SwipeComponent : GemComponent
         Idle,
         Touched,
         Swiping
-    }
-
-    private Transform trans;
-    public Transform Trans
-    {
-        get
-        {
-            if (null == trans)
-            {
-                trans = transform;
-            }
-            return trans;
-        }
     }
 
     private Camera currentCamera;
@@ -47,13 +34,6 @@ public class SwipeComponent : GemComponent
         set { currentConstrains = value; }
     }
 
-    private Vector3 basePosition = Vector3.zero;
-    public Vector3 BasePosition
-    {
-        get { return basePosition; }
-        set { basePosition = value; }
-    }
-
     private float permitedDistance = 1.0f;
     public float PermitedDistance
     {
@@ -68,13 +48,14 @@ public class SwipeComponent : GemComponent
     [SerializeField]
     private Direction currentDirection = Direction.None;
 
+    [SerializeField]
+    private LayerMask layerMask = 0;
+
+    private Vector3 basePosition = Vector3.zero;
+    private Transform targetTransform;
+    private GemController targetGemController;
     private State currentState = State.Idle;
     private Vector3 mouseDownWorldPosition = Vector3.zero;
-
-    public override void SetPosition(int x, int y, bool interpolate = false)
-    {
-        BasePosition = new Vector3(x, y);
-    }
 
     public void AddConstrain(Direction constrain)
     {
@@ -86,18 +67,30 @@ public class SwipeComponent : GemComponent
         currentConstrains = currentConstrains & ~constrain;
     }
 
-    private void OnMouseDown()
-    {
-        if (currentState != State.Idle)
-        {
-            SetToDefault();
-        }
-        mouseDownWorldPosition = CurrentCamera.ScreenToWorldPoint(Input.mousePosition);
-        currentState = State.Touched;
-    }
-
     private void Update()
     {
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (currentState != State.Idle)
+            {
+                SetToDefault();
+            }
+            mouseDownWorldPosition = CurrentCamera.ScreenToWorldPoint(Input.mousePosition);
+            Collider2D collider = Physics2D.OverlapPoint(mouseDownWorldPosition, layerMask);
+            if (collider != null)
+            {
+                targetTransform = collider.transform;
+                currentState = State.Touched;
+                targetGemController = collider.GetComponent<GemController>();
+                currentConstrains = targetGemController.Constrains;
+                basePosition = new Vector3(targetGemController.CurrentX, targetGemController.CurrentY);
+            }
+            else
+            {
+                mouseDownWorldPosition = Vector2.zero;
+                targetTransform = null;
+            }
+        }
         if (Input.GetMouseButton(0))
         {
             if (currentState == State.Touched || currentState == State.Swiping)
@@ -109,10 +102,7 @@ public class SwipeComponent : GemComponent
         {
             if (currentState == State.Swiping)
             {
-                if (OnSwipeEndEvent != null)
-                {
-                    OnSwipeEndEvent(this, currentDirection);
-                }
+                targetGemController.OnSwipeEnd(this, currentDirection);
             }
             SetToDefault();
         }
@@ -157,14 +147,11 @@ public class SwipeComponent : GemComponent
                 SetToDefault();
                 return;
             }
-            if (OnSwipeStartEvent != null)
-            {
-                OnSwipeStartEvent(this, currentDirection);
-            }
+            targetGemController.OnSwipeStart(this, currentDirection);
         }
         if (currentState == State.Swiping)
         {
-            Vector3 position = Trans.position;
+            Vector3 position = targetTransform.position;
             switch (currentDirection)
             {
                 case Direction.Left:
@@ -180,7 +167,7 @@ public class SwipeComponent : GemComponent
                     position.y = mouseDiff.y <= -permitedDistance ? basePosition.y - permitedDistance : mouseDiff.y < 0.0f ? mouseWorldPosition.y : basePosition.y;
                     break;
             }
-            Trans.position = position;
+            targetTransform.position = position;
         }
     }
 
