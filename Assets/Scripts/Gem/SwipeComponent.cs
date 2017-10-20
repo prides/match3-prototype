@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Match3Core;
 
 public class SwipeComponent : MonoBehaviour
 {
@@ -53,7 +54,7 @@ public class SwipeComponent : MonoBehaviour
 
     private Vector3 basePosition = Vector3.zero;
     private Transform targetTransform;
-    private GemController targetGemController;
+    private GemControllerWrapper targetGemController;
     private State currentState = State.Idle;
     private Vector3 mouseDownWorldPosition = Vector3.zero;
 
@@ -81,7 +82,7 @@ public class SwipeComponent : MonoBehaviour
             {
                 targetTransform = collider.transform;
                 currentState = State.Touched;
-                targetGemController = collider.GetComponent<GemController>();
+                targetGemController = collider.GetComponent<GemControllerWrapper>();
                 currentConstrains = targetGemController.Constrains;
                 basePosition = new Vector3(targetGemController.CurrentX, targetGemController.CurrentY);
             }

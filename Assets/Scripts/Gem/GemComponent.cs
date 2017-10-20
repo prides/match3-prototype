@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Match3Core;
 
 public abstract class GemComponent : MonoBehaviour
 {

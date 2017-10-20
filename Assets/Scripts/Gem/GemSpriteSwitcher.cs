@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using Match3Core;
 
 public class GemSpriteSwitcher : GemComponent
 {
