@@ -53,6 +53,11 @@ public class GemControllerWrapper : GemComponent
         }
     }
 
+    public bool IsActive
+    {
+        get { return instance.IsActive; }
+    }
+
     private void Start()
     {
         movingComponent.OnMovingStartEvent += OnMovingStart;
@@ -91,9 +96,16 @@ public class GemControllerWrapper : GemComponent
         this.instance.OnFadeout += OnFadeout;
     }
 
-    private void OnAppear(GemController sender)
+    private void OnAppear(GemController sender, bool animated)
     {
-        StartCoroutine(WaitAndTrigger(Randomizer.Range(0.0f, 0.75f), "appear"));
+        if (animated)
+        {
+            StartCoroutine(WaitAndTrigger(Randomizer.Range(0.0f, 0.75f), "appear"));
+        }
+        else
+        {
+            gemAnimator.SetTrigger("appear");
+        }
     }
 
     private void OnFadeout(GemController sender)

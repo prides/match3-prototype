@@ -80,11 +80,14 @@ public class SwipeComponent : MonoBehaviour
             Collider2D collider = Physics2D.OverlapPoint(mouseDownWorldPosition, layerMask);
             if (collider != null)
             {
-                targetTransform = collider.transform;
-                currentState = State.Touched;
                 targetGemController = collider.GetComponent<GemControllerWrapper>();
-                currentConstrains = targetGemController.Constrains;
-                basePosition = new Vector3(targetGemController.CurrentX, targetGemController.CurrentY);
+                if (targetGemController.IsActive)
+                {
+                    targetTransform = collider.transform;
+                    currentState = State.Touched;
+                    currentConstrains = targetGemController.Constrains;
+                    basePosition = new Vector3(targetGemController.CurrentX, targetGemController.CurrentY);
+                }
             }
             else
             {
@@ -96,15 +99,45 @@ public class SwipeComponent : MonoBehaviour
         {
             if (currentState == State.Touched || currentState == State.Swiping)
             {
-                OnDrag();
+                //OnDrag();
+                Vector3 mouseWorldPosition = CurrentCamera.ScreenToWorldPoint(Input.mousePosition);
+                float mouseDistance = Vector3.Distance(mouseDownWorldPosition, mouseWorldPosition);
+                Vector3 mouseDiff = mouseWorldPosition - mouseDownWorldPosition;
+                if (mouseDistance > deadZoneDistance && currentState == State.Touched)
+                {
+                    if (Mathf.Abs(mouseDiff.x) > Mathf.Abs(mouseDiff.y))
+                    {
+                        if (mouseDiff.x > 0)
+                        {
+                            currentDirection = Direction.Right;
+                        }
+                        else
+                        {
+                            currentDirection = Direction.Left;
+                        }
+                    }
+                    else
+                    {
+                        if (mouseDiff.y > 0)
+                        {
+                            currentDirection = Direction.Up;
+                        }
+                        else
+                        {
+                            currentDirection = Direction.Down;
+                        }
+                    }
+                    targetGemController.OnSwipeEnd(this, currentDirection);
+                    SetToDefault();
+                }
             }
         }
         if (Input.GetMouseButtonUp(0))
         {
-            if (currentState == State.Swiping)
-            {
-                targetGemController.OnSwipeEnd(this, currentDirection);
-            }
+            //if (currentState == State.Swiping)
+            //{
+            //    targetGemController.OnSwipeEnd(this, currentDirection);
+            //}
             SetToDefault();
         }
     }
