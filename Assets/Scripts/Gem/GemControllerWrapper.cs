@@ -26,6 +26,10 @@ public class GemControllerWrapper : GemComponent
 
     [SerializeField]
     [ReadOnly]
+    private GemSpecialType specialType;
+
+    [SerializeField]
+    [ReadOnly]
     private int currentX = 0;
     public int CurrentX
     {
@@ -70,6 +74,7 @@ public class GemControllerWrapper : GemComponent
         this.instance.OnPositionChanged -= OnPositionChanged;
         this.instance.OnAppear -= OnAppear;
         this.instance.OnFadeout -= OnFadeout;
+        this.instance.OnSpecialTypeChanged -= OnSpecialTypeChanged;
 
         movingComponent.OnMovingStartEvent -= OnMovingStart;
         movingComponent.OnMovingEndEvent -= OnMovingEnd;
@@ -81,10 +86,7 @@ public class GemControllerWrapper : GemComponent
         {
             return;
         }
-        if (instance.NeighborChangedFlag != Direction.None)
-        {
-            instance.OnNeighborChanged();
-        }
+        instance.Update();
     }
 
     public void SetInstance(GemController instance)
@@ -94,10 +96,12 @@ public class GemControllerWrapper : GemComponent
         this.instance.OnPositionChanged += OnPositionChanged;
         this.instance.OnAppear += OnAppear;
         this.instance.OnFadeout += OnFadeout;
+        this.instance.OnSpecialTypeChanged += OnSpecialTypeChanged;
     }
 
     private void OnAppear(GemController sender, bool animated)
     {
+        gameObject.SetActive(true);
         if (animated)
         {
             StartCoroutine(WaitAndTrigger(Randomizer.Range(0.0f, 0.75f), "appear"));
@@ -110,7 +114,14 @@ public class GemControllerWrapper : GemComponent
 
     private void OnFadeout(GemController sender)
     {
-        gemAnimator.SetTrigger("fadeout");
+        if (gameObject.activeSelf)
+        {
+            gemAnimator.SetTrigger("fadeout");
+        }
+        else
+        {
+            Debug.Log("activeSelf is false");
+        }
     }
 
     private void OnPositionChanged(GemController sender, int x, int y, bool interpolate)
@@ -129,6 +140,15 @@ public class GemControllerWrapper : GemComponent
         foreach (GemComponent gemComponent in gemComponents)
         {
             gemComponent.SetGemType(type);
+        }
+    }
+
+    private void OnSpecialTypeChanged(GemController sender, GemSpecialType specialType)
+    {
+        this.specialType = specialType;
+        foreach (GemComponent gemComponent in gemComponents)
+        {
+            gemComponent.SetGemSpecialType(specialType);
         }
     }
 
@@ -151,11 +171,13 @@ public class GemControllerWrapper : GemComponent
 
     private void OnMovingStart(MovingComponent sender)
     {
+        //Debug.Log("OnMovingStart " + instance.ToString());
         instance.OnMovingStart();
     }
 
     private void OnMovingEnd(MovingComponent sender)
     {
+        //Debug.Log("OnMovingEnd " + instance.ToString());
         instance.OnMovingEnd();
     }
 

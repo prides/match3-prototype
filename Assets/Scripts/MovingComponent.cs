@@ -46,6 +46,14 @@ public class MovingComponent : GemComponent
         if (interpolate)
         {
             Destination = new Vector3(x, y);
+            if (state == MovingState.Idle)
+            {
+                if (null != OnMovingStartEvent)
+                {
+                    OnMovingStartEvent(this);
+                }
+                state = MovingState.Moving;
+            }
         }
         else
         {
@@ -57,14 +65,6 @@ public class MovingComponent : GemComponent
     {
         if (isDirty)
         {
-            if (state == MovingState.Idle)
-            {
-                if (null != OnMovingStartEvent)
-                {
-                    OnMovingStartEvent(this);
-                }
-                state = MovingState.Moving;
-            }
             progress = Mathf.Clamp01(progress + Time.deltaTime * 2.0f);
             Trans.position = Vector3.Lerp(Trans.position, destination, progress);
             if (progress >= 1.0f)
