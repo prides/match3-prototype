@@ -65,7 +65,7 @@ public class MovingComponent : GemComponent
     {
         if (isDirty)
         {
-            progress = Mathf.Clamp01(progress + Time.deltaTime * 2.0f);
+            progress = Mathf.Clamp01(progress + Time.deltaTime * 3.0f);
             Trans.position = Vector3.Lerp(Trans.position, destination, progress);
             if (progress >= 1.0f)
             {
