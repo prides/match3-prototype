@@ -92,6 +92,7 @@ public class GemControllerWrapper : GemComponent
     public void SetInstance(GemController instance)
     {
         this.instance = instance;
+        this.instance.tag = this;
         this.instance.OnTypeChanged += OnTypeChanged;
         this.instance.OnPositionChanged += OnPositionChanged;
         this.instance.OnAppear += OnAppear;
@@ -130,7 +131,7 @@ public class GemControllerWrapper : GemComponent
         CurrentY = y;
         foreach (GemComponent gemComponent in gemComponents)
         {
-            gemComponent.SetPosition(x, y, interpolate);
+            gemComponent.SetPosition(new Vector3(x, y), interpolate);
         }
     }
 
@@ -166,6 +167,11 @@ public class GemControllerWrapper : GemComponent
     public void OnSwipeEnd(SwipeComponent sender, Direction direction)
     {
         //Debug.Log("Moving gem(" + currentX + ", " + currentY + ") to " + direction);
+        MoveTo(direction);
+    }
+
+    public void MoveTo(Direction direction)
+    {
         instance.MoveTo(direction);
     }
 

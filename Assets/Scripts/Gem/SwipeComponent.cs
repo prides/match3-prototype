@@ -57,6 +57,7 @@ public class SwipeComponent : MonoBehaviour
     private GemControllerWrapper targetGemController;
     private State currentState = State.Idle;
     private Vector3 mouseDownWorldPosition = Vector3.zero;
+    private bool isEnable = false;
 
     public void AddConstrain(Direction constrain)
     {
@@ -66,6 +67,12 @@ public class SwipeComponent : MonoBehaviour
     public void RemoveConstrain(Direction constrain)
     {
         currentConstrains = currentConstrains & ~constrain;
+    }
+
+    public void SetActive(bool value)
+    {
+        isEnable = value;
+        gameObject.SetActive(value);
     }
 
     private void Update()

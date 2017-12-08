@@ -2,18 +2,27 @@ using UnityEngine;
 
 public class LoggerWrapper : MonoBehaviour
 {
+    public bool listenMessage = true;
+    public bool listenWarning = true;
+    public bool listenError = true;
     private void Awake()
     {
-        Match3Core.Logger.Instance.OnDebugMessage += OnDebugMessage;
-        Match3Core.Logger.Instance.OnWarningMessage += OnWarningMessage;
-        Match3Core.Logger.Instance.OnErrorMessage += OnErrorMessage;
+        if (listenMessage)
+            Match3Core.Logger.Instance.OnDebugMessage += OnDebugMessage;
+        if (listenWarning)
+            Match3Core.Logger.Instance.OnWarningMessage += OnWarningMessage;
+        if (listenError)
+            Match3Core.Logger.Instance.OnErrorMessage += OnErrorMessage;
     }
 
     private void OnDestroy()
     {
-        Match3Core.Logger.Instance.OnDebugMessage -= OnDebugMessage;
-        Match3Core.Logger.Instance.OnWarningMessage -= OnWarningMessage;
-        Match3Core.Logger.Instance.OnErrorMessage -= OnErrorMessage;
+        if (listenMessage)
+            Match3Core.Logger.Instance.OnDebugMessage -= OnDebugMessage;
+        if (listenWarning)
+            Match3Core.Logger.Instance.OnWarningMessage -= OnWarningMessage;
+        if (listenError)
+            Match3Core.Logger.Instance.OnErrorMessage -= OnErrorMessage;
     }
 
     private void OnDebugMessage(string message)

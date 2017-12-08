@@ -41,11 +41,11 @@ public class MovingComponent : GemComponent
     private MovingState state = MovingState.Idle;
     private float progress = 0.0f;
 
-    public override void SetPosition(int x, int y, bool interpolate = false)
+    public override void SetPosition(Vector3 position, bool interpolate = false)
     {
         if (interpolate)
         {
-            Destination = new Vector3(x, y);
+            Destination = position;
             if (state == MovingState.Idle)
             {
                 if (null != OnMovingStartEvent)
@@ -57,7 +57,7 @@ public class MovingComponent : GemComponent
         }
         else
         {
-            Trans.position = new Vector3(x, y);
+            Trans.localPosition = position;
         }
     }
 
@@ -66,7 +66,7 @@ public class MovingComponent : GemComponent
         if (isDirty)
         {
             progress = Mathf.Clamp01(progress + Time.deltaTime * 3.0f);
-            Trans.position = Vector3.Lerp(Trans.position, destination, progress);
+            Trans.localPosition = Vector3.Lerp(Trans.localPosition, destination, progress);
             if (progress >= 1.0f)
             {
                 isDirty = false;
