@@ -115,7 +115,7 @@ public class GemManagerWrapper : MonoBehaviour
     private List<GemPoint> gemPoints = new List<GemPoint>();
     private void OnGemMatch(GemManager sender, GemController instance)
     {
-        if (instance.CurrentGemType == GemType.HitType)
+        if (instance.SpecialType == GemSpecialType.HitType)
         {
             return;
         }

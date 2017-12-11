@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using Match3Core;
 
 public class GameManager : MonoBehaviour
@@ -61,11 +62,17 @@ public class GameManager : MonoBehaviour
         if (gemtype == GemType.Money)
         {
             GiveMoney(attackStrength);
-            TryToAttack();
+            StartCoroutine(WaitAndTryToAttack(1.0f));
             return;
         }
         BattleManager.AttackType attackType = GetAttackTypeByGemType(gemtype);
         battleManager.Attack(isPlayerMove, attackType, attackStrength, () => { TryToAttack(); });
+    }
+
+    private IEnumerator WaitAndTryToAttack(float waitTime)
+    {
+        yield return new WaitForSeconds(waitTime);
+        TryToAttack();
     }
 
     private void GiveMoney(float strength)
@@ -75,6 +82,7 @@ public class GameManager : MonoBehaviour
 
     private void NextMove()
     {
+        battleManager.NextTurn();
         if (isPlayerMove)
         {
             isPlayerMove = !isPlayerMove;
