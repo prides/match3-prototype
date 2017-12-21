@@ -2,14 +2,23 @@ using UnityEngine;
 using System.Collections;
 using Match3Core;
 
+using UI;
+using AI;
+using Battle;
+using Match3Wrapper;
+using ActionQueue;
+using PlayerInput;
+
+public delegate void SimpleCallbackDelegate();
+
 public class GameManager : MonoBehaviour
 {
     [SerializeField]
     private GemManagerWrapper gemManager;
     [SerializeField]
-    private BrokenGemsQueue brokenGemsQueue;
+    private BattleActionsQueue battleActionsQueue;
     [SerializeField]
-    private BattleManager battleManager;
+    private BattleManagerBase battleManager;
     [SerializeField]
     private AIController aiController;
     [SerializeField]
@@ -22,13 +31,51 @@ public class GameManager : MonoBehaviour
         swipeComponent.SetActive(true);
         gemManager.OnGemPointsReceivedEvent += OnGemPointsReceivedEvent;
         gemManager.OnReadyChangedEvent += OnMatchReadyChangedEvent;
+        battleManager.OnPlayerLoseEvent += OnPlayerLose;
+        battleManager.Init();
     }
 
-    private void OnMatchReadyChangedEvent(object sender, bool value)
+    private void OnDestroy()
     {
-        if (value)
+        battleManager.OnPlayerLoseEvent -= OnPlayerLose;
+        battleManager.Deinit();
+        gemManager.OnGemPointsReceivedEvent -= OnGemPointsReceivedEvent;
+        gemManager.OnReadyChangedEvent -= OnMatchReadyChangedEvent;
+    }
+
+    private bool isGameOver;
+    [SerializeField]
+    private GameOverTextController gameoverText;
+    private void OnPlayerLose(BattleManagerBase sender, int playerNum)
+    {
+        swipeComponent.SetActive(false);
+        if (playerNum == 1)
         {
-            TryToAttack();
+            gameoverText.ShowLoseText();
+        }
+        else
+        {
+            gameoverText.ShowWinText();
+        }
+        isGameOver = true;
+    }
+
+    private void OnMatchReadyChangedEvent(object sender, bool ready)
+    {
+        if (isGameOver)
+        {
+            return;
+        }
+        if (ready)
+        {
+            if (isPlayerMove && battleActionsQueue.GetQueueLength() == 0)
+            {
+                swipeComponent.SetActive(true);
+            }
+            else
+            {
+                TryToAttack();
+            }
         }
         else
         {
@@ -38,12 +85,12 @@ public class GameManager : MonoBehaviour
 
     private void OnGemPointsReceivedEvent(object sender, GemPoint[] gemPoints)
     {
-        brokenGemsQueue.AddGemPoints(gemPoints);
+        battleActionsQueue.AddGemPoints(gemPoints);
     }
 
     private void TryToAttack()
     {
-        GemPoint[] gemPoints = brokenGemsQueue.GetGemPoints();
+        GemPoint[] gemPoints = battleActionsQueue.GetGemPoints();
         if (gemPoints == null)
         {
             NextMove();
@@ -65,8 +112,8 @@ public class GameManager : MonoBehaviour
             StartCoroutine(WaitAndTryToAttack(1.0f));
             return;
         }
-        BattleManager.AttackType attackType = GetAttackTypeByGemType(gemtype);
-        battleManager.Attack(isPlayerMove, attackType, attackStrength, () => { TryToAttack(); });
+        ActionType attackType = GetAttackTypeByGemType(gemtype);
+        battleManager.Action(attackType, attackStrength, () => { TryToAttack(); });
     }
 
     private IEnumerator WaitAndTryToAttack(float waitTime)
@@ -83,15 +130,14 @@ public class GameManager : MonoBehaviour
     private void NextMove()
     {
         battleManager.NextTurn();
+        isPlayerMove = !isPlayerMove;
         if (isPlayerMove)
         {
-            isPlayerMove = !isPlayerMove;
-            AiMove();
+            swipeComponent.SetActive(true);
         }
         else
         {
-            isPlayerMove = !isPlayerMove;
-            swipeComponent.SetActive(true);
+            AiMove();
         }
     }
 
@@ -100,23 +146,23 @@ public class GameManager : MonoBehaviour
         aiController.Move(gemManager.PossibleMoves.ToArray());
     }
 
-    private BattleManager.AttackType GetAttackTypeByGemType(GemType type)
+    private ActionType GetAttackTypeByGemType(GemType type)
     {
         switch(type)
         {
             case GemType.Close:
-                return BattleManager.AttackType.Close;
+                return ActionType.Close;
             case GemType.Defence:
-                return BattleManager.AttackType.Defence;
+                return ActionType.Defence;
             case GemType.Distance:
-                return BattleManager.AttackType.Distance;
+                return ActionType.Distance;
             case GemType.Heal:
-                return BattleManager.AttackType.Heal;
+                return ActionType.Heal;
             case GemType.Mass:
-                return BattleManager.AttackType.Mass;
+                return ActionType.Mass;
             default:
                 Debug.LogError("unknown gem type: " + type);
-                return BattleManager.AttackType.Close;
+                return ActionType.Close;
         }
     }
 }
