@@ -113,7 +113,7 @@ public class GameManager : MonoBehaviour
             return;
         }
         ActionType attackType = GetAttackTypeByGemType(gemtype);
-        battleManager.Action(attackType, attackStrength, () => { TryToAttack(); });
+        battleManager.Action(attackType, attackStrength, () => { StartCoroutine(WaitAndTryToAttack(0.1f)); });
     }
 
     private IEnumerator WaitAndTryToAttack(float waitTime)

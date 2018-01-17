@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 302b6c9086b40d141963180909b1120d
+timeCreated: 1516205098
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: WellwaitFree
+  fontNames:
+  - WellwaitFree
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

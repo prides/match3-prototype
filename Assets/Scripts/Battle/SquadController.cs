@@ -34,11 +34,11 @@ namespace Battle
                 go.transform.parent = this.transform;
                 if (this.transform.localPosition.x < 0.0f)
                 {
-                    go.transform.localPosition = new Vector3(i / 2 == 0 ? 1.5f : -1.5f, 1.0f, i % 2 == 0 ? 1.5f : -1.5f);
+                    go.transform.localPosition = new Vector3(i / 2 == 0 ? 1.5f : -1.5f, 1.0f, i % 2 == 0 ? 0.5f : -0.5f);
                 }
                 else
                 {
-                    go.transform.localPosition = new Vector3(i / 2 == 0 ? -1.5f : 1.5f, 1.0f, i % 2 == 0 ? 1.5f : -1.5f);
+                    go.transform.localPosition = new Vector3(i / 2 == 0 ? -1.5f : 1.5f, 1.0f, i % 2 == 0 ? 0.5f : -0.5f);
                 }
                 SquadUnitController unit = (SquadUnitController)go.GetComponent<SquadUnitController>();
                 currentSquad.SetUnit(unit, i / 2, i % 2);

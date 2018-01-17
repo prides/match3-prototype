@@ -16,10 +16,10 @@ namespace Cam
         {
             SetObliqueness(horizontalOblique, verticalOblique);
         }
-        //private void Update()
-        //{
-        //    SetObliqueness(horizontalOblique, verticalOblique);
-        //}
+        private void Update()
+        {
+            SetObliqueness(horizontalOblique, verticalOblique);
+        }
         void SetObliqueness(float horizObl, float vertObl)
         {
             Camera camera = GetComponent<Camera>();
