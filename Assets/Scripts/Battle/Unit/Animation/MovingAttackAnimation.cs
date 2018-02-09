@@ -10,7 +10,9 @@ namespace Battle
             internal class MovingAttackAnimation : MonoBehaviour, IAttackAnimation
             {
                 [SerializeField]
-                private MovingComponentBase movingComponent;
+                private MovingComponentBase attackMovingComponent;
+                [SerializeField]
+                private MovingComponentBase returnMovingComponent;
                 [SerializeField]
                 private Animator animator;
                 [SerializeField]
@@ -22,7 +24,8 @@ namespace Battle
 
                 private void Start()
                 {
-                    movingComponent.Duration = 1.0f;
+                    attackMovingComponent.Duration = 0.5f;
+                    returnMovingComponent.Duration = 0.5f;
                 }
 
                 public void DoAnimation(Vector3 target, SimpleCallbackDelegate OnDealDamage, SimpleCallbackDelegate OnAnimationOver)
@@ -30,7 +33,7 @@ namespace Battle
                     startPosition = transform.position;
                     isRunning = true;
                     onOver = OnAnimationOver;
-                    movingComponent.MoveTo(target + attackPositionOffset, true, () =>
+                    attackMovingComponent.MoveTo(target + attackPositionOffset, true, () =>
                     {
                         OnDealDamage();
                         animator.SetTrigger("Attack");
@@ -39,7 +42,7 @@ namespace Battle
 
                 private void OnAttackOver()
                 {
-                    movingComponent.MoveTo(startPosition, true, () =>
+                    returnMovingComponent.MoveTo(startPosition, true, () =>
                     {
                         isRunning = false;
                         onOver();

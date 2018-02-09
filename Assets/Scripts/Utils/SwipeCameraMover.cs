@@ -21,6 +21,7 @@ namespace Utils
 
         private void OnMouseDown()
         {
+            Debug.Log("OnMouseDown");
             lastMousePosition = Input.mousePosition;
         }
 

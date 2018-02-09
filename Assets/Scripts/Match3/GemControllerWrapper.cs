@@ -22,6 +22,9 @@ namespace Match3Wrapper
         private GemController instance;
 
         [SerializeField]
+        private Vector2 positionOffset = Vector2.zero;
+
+        [SerializeField]
         [ReadOnly]
         private GemType type;
 
@@ -126,7 +129,7 @@ namespace Match3Wrapper
         {
             CurrentX = x;
             CurrentY = y;
-            movingComponent.MoveTo(new Vector3(x, y), interpolate, () => { instance.OnMovingEnd(); });
+            movingComponent.MoveTo(new Vector3(positionOffset.x * x + x, positionOffset.y * y + y), interpolate, () => { instance.OnMovingEnd(); });
             if (interpolate)
             {
                 instance.OnMovingStart();

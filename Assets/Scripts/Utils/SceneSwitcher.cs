@@ -7,9 +7,14 @@ namespace Utils
     public class SceneSwitcher : MonoBehaviour
     {
         public float delay; //sec
+        [SerializeField]
+        private AudioSource audioSource;
+        [SerializeField]
+        private AudioClip clip;
 
         public void SwitchScene(string sceneName)
         {
+            audioSource.PlayOneShot(clip);
             StartCoroutine(WaitAndSwitchScene(sceneName, delay));
         }
 

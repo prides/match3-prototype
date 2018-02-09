@@ -22,6 +22,10 @@ namespace Battle
             set { enemySquad = value; }
         }
 
+        [SerializeField]
+        private Vector3[] charactersPositions;
+
+        [SerializeField]
         private string[] prefabPaths = new string[] { "Prefabs/Units/CloseUnit", "Prefabs/Units/MassUnit", "Prefabs/Units/DistanceUnit", "Prefabs/Units/HealerUnit" };
         internal void Init()
         {
@@ -32,14 +36,16 @@ namespace Battle
                 GameObject prefab = (GameObject)Resources.Load(prefabPaths[i]);
                 GameObject go = Instantiate(prefab);
                 go.transform.parent = this.transform;
-                if (this.transform.localPosition.x < 0.0f)
-                {
-                    go.transform.localPosition = new Vector3(i / 2 == 0 ? 1.5f : -1.5f, 1.0f, i % 2 == 0 ? 0.5f : -0.5f);
-                }
-                else
-                {
-                    go.transform.localPosition = new Vector3(i / 2 == 0 ? -1.5f : 1.5f, 1.0f, i % 2 == 0 ? 0.5f : -0.5f);
-                }
+                //if (this.transform.localPosition.x > 0.0f)
+                //{
+                //    go.transform.localPosition = new Vector3(i / 2 == 0 ? -1.5f : 1.5f, 1.0f, i % 2 == 0 ? 0.5f : -0.5f);
+                //}
+                //else
+                //{
+                //    go.transform.localPosition = new Vector3(i / 2 == 0 ? 1.5f : -1.5f, 1.0f, i % 2 == 0 ? 0.5f : -0.5f);
+                //}
+                go.transform.localPosition = charactersPositions[i];
+
                 SquadUnitController unit = (SquadUnitController)go.GetComponent<SquadUnitController>();
                 currentSquad.SetUnit(unit, i / 2, i % 2);
                 unit.Type = type;

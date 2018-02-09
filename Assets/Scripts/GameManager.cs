@@ -24,7 +24,24 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private SwipeComponent swipeComponent;
     [SerializeField]
+    private TextValueChanger moneyValueChanger;
+    [SerializeField]
     private bool isPlayerMove = false;
+    [SerializeField]
+    [ReadOnly]
+    private int currentMoney = 0;
+    public int CurrentMoney
+    {
+        get { return currentMoney; }
+        set
+        {
+            currentMoney = value >= 0 ? value : 0;
+            if (moneyValueChanger != null)
+            {
+                moneyValueChanger.OnValueChange(this, currentMoney);
+            }
+        }
+    }
 
     private void Start()
     {
@@ -124,7 +141,11 @@ public class GameManager : MonoBehaviour
 
     private void GiveMoney(float strength)
     {
-        Debug.Log("received " + (int)strength + " money");
+        if (isPlayerMove)
+        {
+            CurrentMoney += (int)strength;
+            Debug.Log("received " + (int)strength + " money");
+        }
     }
 
     private void NextMove()

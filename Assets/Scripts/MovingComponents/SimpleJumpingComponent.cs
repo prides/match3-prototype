@@ -10,15 +10,18 @@ public class SimpleJumpingComponent : MovingComponentBase
         set { height = value; }
     }
 
+    [SerializeField]
+    private AnimationCurve heightChangeCurve;
+
     protected override void Update()
     {
         if (isDirty)
         {
             progress = Mathf.Clamp01(progress + Time.deltaTime / Duration);
             Vector3 currentPosition = useLocalPosition ? Trans.localPosition : Trans.position;
-            currentPosition.x = Mathf.Lerp(currentPosition.x, Destination.x, progress);
-            currentPosition.y = Mathf.Lerp(startPosition.y, startPosition.y + Height, progress < 0.5f ? progress * 2.0f : (1.0f - progress) * 2.0f);
-            currentPosition.z = Mathf.Lerp(currentPosition.z, Destination.z, progress);
+            currentPosition.x = Mathf.Lerp(startPosition.x, Destination.x, progress);
+            currentPosition.y = startPosition.y + Height * heightChangeCurve.Evaluate(progress);
+            currentPosition.z = Mathf.Lerp(startPosition.z, Destination.z, progress);
             if (useLocalPosition)
             {
                 Trans.localPosition = currentPosition;
