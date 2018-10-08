@@ -1,6 +1,6 @@
 # Battle Universe: Begins
 
-![title](Screenshots/Title.png)
+![title](Screenshots/Title.PNG)
 
 Mobile match 3 game prototype
 
